@@ -201,17 +201,6 @@ $('grid').addEventListener('click', e => {
 });
 $('lb').addEventListener('click', () => $('lb').close());
 
-// features
-function showTab(i) {
-  const f = FEATURES[i];
-  [...$('tabs').children].forEach((b, n) => b.setAttribute('aria-selected', n === i));
-  $('panel').innerHTML = `<div><h3>${f.name}</h3><p>${f.text}</p><ul class="chips">${f.items.map(x => `<li>${x}</li>`).join('')}</ul></div>
-    <div class="frame">${f.media ? mediaEl(f.media, f.name) : empty('Clip coming soon')}</div>`;
-}
-$('tabs').innerHTML = FEATURES.map((f, i) => `<button class="tab" role="tab" data-i="${i}">${f.name}</button>`).join('');
-$('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) showTab(+b.dataset.i); });
-showTab(0);
-
 // install
 $('reqs').innerHTML = [['Minecraft', SITE.minecraft], ['Fabric Loader', '≥ ' + SITE.loader], ['Fabric API', 'required'], ['Java', SITE.java + ' or newer'], ['Side', 'client only']]
   .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
