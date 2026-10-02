@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinetica: cinematic crystal PvP for Minecraft</title>
+<meta name="description" content="Kinetica is a Fabric client mod that makes crystal PvP feel like a movie, with camera movement, audio and blast effects.">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--void:#100e1c;--panel:#191629;--line:#2c2745;--bone:#f3effc;--mute:#a8a2c4;--pink:#ff5c8a;--cyan:#52e5ff;
+--display:'Syne','Arial Black',system-ui,sans-serif;--body:'Instrument Sans',system-ui,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--void);color:var(--bone);font:400 1.0625rem/1.6 var(--body);overflow-x:hidden}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.wrap{width:min(1120px,100% - 2.5rem);margin-inline:auto}
+section{padding:5.5rem 0}
+h1,h2,h3{font-family:var(--display);line-height:1.02;margin:0}
+h2{font-size:clamp(1.9rem,4vw,2.9rem);margin-bottom:.6rem}
+.lede{color:var(--mute);max-width:56ch;margin:0 0 2.2rem}
+
+/* nav */
+nav{position:absolute;inset:0 0 auto 0;z-index:5}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 0}
+.brand{display:flex;align-items:center;gap:.7rem;font:800 1.15rem var(--display);text-decoration:none}
+.brand img{width:34px;height:34px;border-radius:9px;object-fit:cover}
+nav ul{display:flex;gap:1.6rem;list-style:none;margin:0;padding:0;font-size:.95rem}
+nav ul a{text-decoration:none;color:var(--mute)}nav ul a:hover{color:var(--bone)}
+
+/* hero */
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;padding:7rem 0 4rem;
+background:radial-gradient(60% 55% at 78% 40%,rgba(255,92,138,.22),transparent 70%),radial-gradient(40% 40% at 90% 85%,rgba(82,229,255,.14),transparent 70%)}
+.hero h1{font-size:clamp(3.2rem,10.5vw,8.6rem);font-weight:800;letter-spacing:-.025em;text-shadow:3px 0 0 rgba(255,92,138,.85),-3px 0 0 rgba(82,229,255,.85)}
+.hero p{font-size:clamp(1.1rem,2vw,1.4rem);color:var(--mute);max-width:34ch;margin:1.4rem 0 2.2rem}
+.cta{display:flex;flex-wrap:wrap;gap:.8rem}
+.btn{font:600 1rem var(--body);padding:.85rem 1.4rem;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--bone);text-decoration:none;cursor:pointer}
+.btn:hover{border-color:var(--bone)}
+.btn.main{background:var(--pink);border-color:var(--pink);color:#1a0a12}
+.btn.main:hover{background:#ff7a9f;border-color:#ff7a9f}
+.meta{margin-top:2.2rem;color:var(--mute);font-size:.92rem}
+
+/* blast moment */
+.flash{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:0;background:radial-gradient(circle at var(--x,50%) var(--y,50%),#fff 0,rgba(255,200,220,.7) 18%,transparent 60%)}
+.ring{position:fixed;z-index:49;pointer-events:none;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:3px solid var(--cyan);box-shadow:0 0 30px var(--pink),inset 0 0 30px var(--pink);animation:ring .9s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes ring{from{transform:scale(.2);opacity:1}to{transform:scale(45);opacity:0}}
+@keyframes flash{0%{opacity:.9}100%{opacity:0}}
+@keyframes shake{0%,100%{transform:none}15%{transform:translate(-7px,4px) rotate(-.4deg)}35%{transform:translate(6px,-5px) rotate(.35deg)}55%{transform:translate(-4px,3px)}75%{transform:translate(3px,-2px)}}
+@keyframes split{0%{text-shadow:20px 0 0 rgba(255,92,138,.9),-20px 0 0 rgba(82,229,255,.9)}100%{text-shadow:3px 0 0 rgba(255,92,138,.85),-3px 0 0 rgba(82,229,255,.85)}}
+.boom main{animation:shake .6s ease-out}
+.boom .flash{animation:flash .7s ease-out}
+.boom .hero h1{animation:split .9s ease-out}
+
+/* film + media frames */
+.frame{position:relative;aspect-ratio:16/9;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
+.frame iframe,.frame img,.frame video{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
+.empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:1rem;color:var(--mute);font-size:.95rem;
+background:repeating-linear-gradient(135deg,transparent 0 14px,rgba(255,255,255,.02) 14px 28px)}
+
+/* features */
+.tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.6rem}
+.tab{font:500 .98rem var(--body);padding:.55rem 1.1rem;border-radius:999px;border:1.5px solid var(--line);background:none;color:var(--mute);cursor:pointer}
+.tab[aria-selected=true]{background:var(--bone);border-color:var(--bone);color:var(--void)}
+.panel{display:grid;grid-template-columns:1fr 1.15fr;gap:2.4rem;align-items:center}
+.panel h3{font-size:1.8rem;margin-bottom:.7rem}
+.panel p{color:var(--mute);margin:0 0 1.2rem;max-width:46ch}
+.chips{display:flex;flex-wrap:wrap;gap:.45rem;list-style:none;margin:0;padding:0}
+.chips li{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:.3rem .7rem;font-size:.9rem}
+
+/* gallery */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.2rem}
+.grid figure{margin:0;cursor:zoom-in}
+.grid .frame{border-radius:12px}
+.grid figcaption{padding:.6rem .2rem 0;font-size:.95rem}
+.grid figcaption span{color:var(--mute);margin-left:.5rem;font-size:.85rem}
+dialog{border:0;background:transparent;padding:0;max-width:min(1100px,94vw);width:100%}
+dialog::backdrop{background:rgba(8,6,16,.9)}
+dialog .frame{aspect-ratio:auto;max-height:86vh;border:0}
+dialog img,dialog video{position:static;height:auto;max-height:86vh;object-fit:contain;border-radius:12px}
+
+/* setup */
+.setup{display:grid;grid-template-columns:1fr 1fr;gap:3rem}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:.7rem 1.4rem}
+dt{color:var(--mute)}dd{margin:0}
+kbd{font:600 .9rem var(--body);border:1.5px solid var(--line);border-bottom-width:3px;border-radius:7px;padding:.1rem .55rem;background:var(--panel)}
+footer{border-top:1px solid var(--line);padding:2rem 0 3rem;color:var(--mute);font-size:.92rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between}
+
+@media(max-width:780px){nav ul{display:none}.panel,.setup{grid-template-columns:1fr}section{padding:4rem 0}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.boom main,.boom .flash,.boom .hero h1{animation:none}.ring{display:none}}
+</style>
+</head>
+<body>
+<div class="flash" id="flash"></div>
+<main>
+<nav><div class="wrap">
+  <a class="brand" href="#top"><img src="icon.png" alt="">Kinetica</a>
+  <ul><li><a href="#film">Film</a></li><li><a href="#showcase">Showcase</a></li><li><a href="#features">Features</a></li><li><a href="#setup">Install</a></li></ul>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+  <h1>Crystal PvP,<br>shot like<br>a film.</h1>
+  <p>Kinetica adds camera movement, layered audio and blast effects to every fight. Client-side only.</p>
+  <div class="cta">
+    <a class="btn main" id="dl" href="#setup" hidden>Download</a>
+    <button class="btn" id="fire" type="button">Fire a crystal</button>
+    <a class="btn" href="#film">Watch the trailer</a>
+  </div>
+  <div class="meta" id="meta"></div>
+</div></header>
+
+<section id="film"><div class="wrap">
+  <h2>See it in a fight</h2>
+  <p class="lede">Real footage from a real crystal fight, nothing staged.</p>
+  <div class="frame" id="video"></div>
+</div></section>
+
+<section id="showcase"><div class="wrap">
+  <h2>Showcase</h2>
+  <p class="lede">Short clips of single moments: a blast, a pearl, a totem pop.</p>
+  <div class="grid" id="grid"></div>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <h2>Every effect has a slider</h2>
+  <p class="lede">The settings screen is split into five tabs. Each one is tuned from 0% to 150%.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="panel" id="panel" role="tabpanel"></div>
+</div></section>
+
+<section id="setup"><div class="wrap setup">
+  <div>
+    <h2>Install</h2>
+    <p class="lede">Drop the jar in your mods folder with Fabric API and launch.</p>
+    <dl id="reqs"></dl>
+  </div>
+  <div>
+    <h2>Controls</h2>
+    <p class="lede">Both keys can be rebound under Controls, in the Kinetica category.</p>
+    <dl>
+      <dt><kbd>O</kbd></dt><dd>Open the effects settings</dd>
+      <dt><kbd>P</kbd></dt><dd>Toggle panic effects</dd>
+    </dl>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><span id="foot"></span><span id="links"></span></div></footer>
+<dialog id="lb"><div class="frame" id="lbBody"></div></dialog>
+
+<script>
+/* ===== EDIT THIS BLOCK: everything on the page comes from here ===== */
+const SITE = {
+  version: '2.0.1', author: 'MixiMay',
+  minecraft: '1.21.11', loader: '0.19.5', java: '21',
+  youtubeId: '',                       // paste the ID from youtube.com/watch?v=THIS_PART
+  links: { download: '', source: '', modrinth: '' }   // empty = hidden
+};
+
+// One line per clip. .gif works; .mp4/.webm play as silent looping video (much smaller files).
+const MEDIA = [
+  // { src: 'media/crystal-blast.gif', title: 'Crystal blast', tag: 'Events' },
+  // { src: 'media/totem-pop.webm',    title: 'Totem pop',     tag: 'Events' },
+];
+
+// The five settings tabs. Add `media: 'media/camera.gif'` to show a clip beside a tab.
+const FEATURES = [
+  { name: 'Camera', media: '', text: 'The view kicks, rolls and tilts with the fight. Hits push your head, strafing leans the camera and sprinting widens the FOV.',
+    items: ['Camera strength','Impact kick','Sprint FOV','Strafe roll','Panic side tilt','Panic health threshold'] },
+  { name: 'Visuals', media: '', text: 'A post-processing pass adds chromatic aberration, radial blur, exposure and vignette that build with combat intensity. Low health gets its own treatment.',
+    items: ['Visual strength','Health treatment','Shockwave','Exposure flash'] },
+  { name: 'Events', media: '', text: 'Each big moment gets its own effect, including a warning when a crystal is placed near you.',
+    items: ['Crystal blast','Anchor blast','Pearl teleport','Totem pop','Crystal telegraph'] },
+  { name: 'Audio', media: '', text: 'Blasts are layered and the world gets quieter around them. A heartbeat comes in at low health and combat music follows the fight.',
+    items: ['Audio strength','Heartbeat','Ambient duck','Combat music','Blast layers'] },
+  { name: 'HUD', media: '', text: 'Hit markers and a directional damage arc show where you are being hit. The HUD can strip down to the essentials while you fight.',
+    items: ['HUD strength','Directional damage arc','Hit marker','Intensity meter','Minimal HUD in combat','Auto-scale on low FPS'] }
+];
+/* ===== end of editable block ===== */
+
+const $ = id => document.getElementById(id);
+const isVideo = s => /\.(mp4|webm)$/i.test(s);
+const mediaEl = (src, alt) => isVideo(src)
+  ? `<video src="${src}" autoplay loop muted playsinline></video>`
+  : `<img src="${src}" alt="${alt}" loading="lazy">`;
+const empty = msg => `<div class="empty"><span>${msg}</span></div>`;
+
+// hero extras
+$('meta').textContent = `Version ${SITE.version} · Minecraft ${SITE.minecraft} · Fabric · by ${SITE.author}`;
+if (SITE.links.download) { $('dl').href = SITE.links.download; $('dl').hidden = false; }
+
+// film
+$('video').innerHTML = SITE.youtubeId
+  ? `<iframe src="https://www.youtube-nocookie.com/embed/${SITE.youtubeId}" title="Kinetica trailer" loading="lazy" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>`
+  : empty('Trailer coming soon');
+
+// gallery
+$('grid').innerHTML = MEDIA.length
+  ? MEDIA.map((m, i) => `<figure data-i="${i}"><div class="frame">${mediaEl(m.src, m.title)}</div><figcaption>${m.title}<span>${m.tag || ''}</span></figcaption></figure>`).join('')
+  : [1,2,3].map(() => `<figure style="cursor:default"><div class="frame">${empty('Clip coming soon')}</div></figure>`).join('');
+$('grid').addEventListener('click', e => {
+  const f = e.target.closest('figure[data-i]'); if (!f) return;
+  const m = MEDIA[f.dataset.i];
+  $('lbBody').innerHTML = mediaEl(m.src, m.title); $('lb').showModal();
+});
+$('lb').addEventListener('click', () => $('lb').close());
+
+// features
+function showTab(i) {
+  const f = FEATURES[i];
+  [...$('tabs').children].forEach((b, n) => b.setAttribute('aria-selected', n === i));
+  $('panel').innerHTML = `<div><h3>${f.name}</h3><p>${f.text}</p><ul class="chips">${f.items.map(x => `<li>${x}</li>`).join('')}</ul></div>
+    <div class="frame">${f.media ? mediaEl(f.media, f.name) : empty('Clip coming soon')}</div>`;
+}
+$('tabs').innerHTML = FEATURES.map((f, i) => `<button class="tab" role="tab" data-i="${i}">${f.name}</button>`).join('');
+$('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) showTab(+b.dataset.i); });
+showTab(0);
+
+// install
+$('reqs').innerHTML = [['Minecraft', SITE.minecraft], ['Fabric Loader', '≥ ' + SITE.loader], ['Fabric API', 'required'], ['Java', SITE.java + ' or newer'], ['Side', 'client only']]
+  .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+$('foot').textContent = `Kinetica ${SITE.version}, made by ${SITE.author}. Not affiliated with Mojang or Microsoft.`;
+$('links').innerHTML = [['Modrinth', SITE.links.modrinth], ['Source', SITE.links.source]].filter(l => l[1]).map(([n, u]) => `<a href="${u}">${n}</a>`).join(' &nbsp; ');
+
+// the one big moment: a fake crystal blast
+const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function blast(x, y) {
+  if (calm) return;
+  const root = document.documentElement;
+  $('flash').style.setProperty('--x', x + 'px'); $('flash').style.setProperty('--y', y + 'px');
+  const r = document.createElement('div'); r.className = 'ring'; r.style.left = x + 'px'; r.style.top = y + 'px';
+  document.body.append(r); setTimeout(() => r.remove(), 1000);
+  document.body.classList.remove('boom'); void document.body.offsetWidth; document.body.classList.add('boom');
+}
+$('fire').addEventListener('click', e => {
+  const b = e.currentTarget.getBoundingClientRect();
+  blast(e.clientX || b.left + b.width / 2, e.clientY || b.top + b.height / 2);
+});
+setTimeout(() => blast(innerWidth * .72, innerHeight * .42), 700);
+</script>
+</body>
+</html>
